@@ -1,0 +1,156 @@
+[project]
+name = "git-tree-project-structure-to-yaml"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "gitpython>=3.1.44",
+    "nutree>=1.1.0",
+    "packaging>=25.0",
+    "pydantic>=2.11.4",
+    "pyyaml>=6.0.2",
+    "typer>=0.15.4",
+    "types-pyyaml>=6.0.12.20250516",
+]
+
+[project.scripts]
+git-tree-project-structure-to-yaml = "git_tree_project_structure_to_yaml:app"
+
+[dependency-groups]
+dev = [
+    "inline-snapshot>=0.23.0",
+    "mypy>=1.15.0",
+    "pytest>=8.3.5",
+    "pytest-cov>=6.1.1",
+    "ruff>=0.11.10",
+    "ty>=0.0.1a5",
+]
+release = ["rooster-blue"]
+
+[tool.uv.sources]
+rooster-blue = { git = "https://github.com/zanieb/rooster", rev = "cf27242" }
+
+[project.urls]
+Repository = "https://github.com/Jamie-BitFlight/git-tree-project-structure-to-yaml"
+
+[build-system]
+requires = ["uv_build>=0.6.16,<0.8"]
+build-backend = "uv_build"
+
+
+[tool.uv]
+cache-keys = [
+    { file = "pyproject.toml" },
+    { file = "**/*.py" },
+]
+
+[tool.ty.rules]
+unused-ignore-comment = "warn"
+redundant-cast = "ignore"
+possibly-unbound-attribute = "error"
+possibly-unbound-import = "error"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+fix = true
+unsafe-fixes = true
+include = ["pyproject.toml", "*.py"]
+
+
+[tool.ruff.format]
+docstring-code-format = true
+quote-style = "double"
+line-ending = "lf"
+skip-magic-trailing-comma = true
+preview = true
+
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle (error)
+    "F",   # pyflakes
+    "B",   # bugbear
+    "B9",
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
+    "I",   # isort
+    "UP",  # pyupgrade
+    "PIE", # flake8-pie
+    "PGH", # pygrep-hooks
+    "PYI", # flake8-pyi
+    "RUF",
+]
+
+ignore = [
+    # only relevant if you run a script with `python -0`,
+    # which seems unlikely for any of the scripts in this repo
+    "B011",
+    # Leave it to the formatter to split long lines and
+    # the judgement of all of us.
+    "E501",
+]
+
+unfixable = ["F401"]
+
+pycodestyle.max-line-length = 120 # E501 reports lines that exceed the length of 100.
+
+[tool.ruff.lint.isort]
+required-imports = ["from __future__ import annotations"]
+combine-as-imports = true
+split-on-trailing-comma = false
+force-single-line = false
+force-wrap-aliases = false
+
+[tool.ruff.lint.flake8-quotes]
+docstring-quotes = "double"
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.mccabe]
+# Unlike Flake8, default to a complexity level of 10.
+max-complexity = 10
+
+
+[tool.ruff.lint.pyupgrade]
+keep-runtime-typing = true
+
+[tool.mypy]
+python_version = "3.12"
+strict_equality = true
+strict_concatenate = true
+# Start off with these
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+ignore_missing_imports = true
+disable_error_code = "call-arg"
+
+[tool.pyright]
+exclude = [
+  "**/node_modules",
+  "**/__pycache__"
+]
+pythonVersion = "3.12"
+reportMissingTypeStubs = false
+reportOptionalMemberAccess = false
+
+
+
+[tool.rooster]
+version-files = [
+    "pyproject.toml"
+]
+ignore-labels = ["internal", "testing"]
+default-bump-type = "pre"
+
+changelog_sections.breaking = "Breaking changes"
+changelog_sections.preview = "Preview features"
+changelog_sections.bug = "Bug fixes"
+changelog_sections.server = "Server"
+changelog_sections.cli = "CLI"
+changelog_sections.__unknown__ = "Other changes"
+changelog_sections.configuration = "Configuration"
+changelog_sections.documentation = "Documentation"

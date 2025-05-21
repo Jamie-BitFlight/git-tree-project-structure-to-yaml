@@ -1,0 +1,159 @@
+<rules>
+<python version="3.12" comment="These rules apply to Python 3.12 development">
+
+<global>
+- Write native Python 3.12
+- When refactoring, modernize to Python 3.12 patterns
+- Replace any pre-3.12 patterns with their native 3.12 equivalents
+- Use `uv` to manage Python dependencies
+<code_structure>
+- Use consistent, clear, and descriptive names for variables, functions, and classes
+- Follow PEP 8 style guide and Python 3.12 best practices
+- Use native lowercase type hints, with pipe syntax (`|`) for union types
+- Keep functions small and focused on a single responsibility
+- Use docstrings for all public functions, classes, and modules
+- Structure code logically with related functions and classes grouped together
+</code_structure>
+</global>
+
+<type_annotations>
+
+- Use lowercase built-in types: `list`, `dict`, `set`, `tuple`, etc.
+- For optional types, use the pipe syntax: `type | None` (not `Optional[type]`)
+- Use appropriate type hints: `str`, `int`, `float`, `bool`, `list[str]`, `dict[str, int]`
+- If there is a native type, use a native type. Never use: `Dict`, `List`, `Tuple`, `Set`, `Optional`, `Type`, `Union`
+- Don't initialize variables with `None` unless their type annotation explicitly includes `None` (e.g., `str | None`)
+
+<code language="python">
+# Good
+def process_data(items: list[str], options: dict[str, int] | None = None) -> bool:
+    result: bool = False
+    # Implementation
+    return result
+</code>
+
+<code language="python">
+# Bad - Don't use
+from typing import Dict, List, Optional, Union
+def process_data(items: List[str], options: Optional[Dict[str, int]] = None) -> Union[bool, None]:
+    result = None  # Bad - initialized with None without type hint allowing it
+    # Implementation
+    return result
+</code>
+</type_annotations>
+
+<imports>
+1. **Place all imports at the top of the file** - Never put imports in the middle of functions, classes, or conditional blocks unless absolutely necessary for handling circular imports
+2. **Group imports in the following order**:
+   - Standard library imports (os, sys, etc.)
+   - Third-party library imports
+   - Local application/library imports
+3. **Separate import groups with a blank line**
+4. **Use absolute imports** rather than relative imports when possible
+5. **Avoid wildcard imports** (`from module import *`)
+6. **Conditional imports** should only be used when absolutely necessary (e.g., for platform-specific code)
+
+Example:
+
+<code language="python">
+# Good
+import os
+import sys
+from typing import Any, ClassVar
+
+from third_party_lib import SomeClass
+
+from local_module.submodule import LocalClass
+from local_module.utils import helper_function
+</code>
+</imports>
+
+<dependencies>
+- Use UV for dependency management instead of pip:
+  <code language="bash">
+  uv pip install "$package"
+  </code>
+- Run Python tools through UV for consistent environment access:
+  <code language="bash">
+  uv run python "$file_path"
+  </code>
+- Specify dependencies in `pyproject.toml` with version constraints
+- Update `uv.lock` when changing dependencies
+</dependencies>
+
+<formatter tool="ruff" comment="Always use ruff formatter to fix formatting issues rather than manually editing">
+Example:
+
+<code language="bash">
+uv run ruff format "$file_path"
+</code>
+
+This ensures consistent application of formatting rules:
+
+- Line length: 120
+- Quote style: Double
+- Indent style: Space
+- Indent size: 4
+
+</formatter>
+
+<lint tool="ruff" comment="Use ruff for linting and automated fixes">
+
+<code language="bash">
+uv run ruff check --fix "$file_path"
+</code>
+
+This command will:
+
+- Identify linting issues
+- Automatically fix applicable issues
+- Output remaining issues that require manual intervention
+  </lint>
+  <testing tool="pytest" comment="pytest" />
+
+<error_handling>
+
+- Use exceptions appropriately: define custom exceptions when needed
+- Catch specific exceptions rather than using bare except clauses
+- Always clean up resources in finally blocks or using context managers
+- Include appropriate logging for debugging purposes
+
+</error_handling>
+
+<documentation>
+
+- Document public APIs thoroughly with examples
+- Include parameter types and return values in docstrings
+- Document exceptions that might be raised
+- Add comments for complex logic explaining the "why" not just the "what"
+
+</documentation>
+
+<complete_workflow>
+
+## Development workflow for improved code quality
+
+1. First plan changes you want to make in the chat window, with code.
+2. Create a test file for the changes you want to make.
+3. Review the plan against the rules, and make any necessary adjustments.
+4. Write the changes to the files, and run:
+   - The formatter: `uv run ruff format "$file_path"`
+   - The linter: `uv run ruff check --fix "$file_path"`
+5. Address any remaining linting issues.
+6. Run the tests to verify functionality: `uv run pytest <test_path>`
+
+</complete_workflow>
+
+<python_feature_set>
+
+## Python 3.12 Features to Leverage
+
+- Use the improved error messages for debugging
+- Take advantage of exception groups for handling multiple errors
+- Use Self type for cleaner class method typing
+- Leverage pipe syntax for type unions (`str | int` instead of `Union[str, int]`)
+- Utilize TaskGroups for cleaner async code when applicable
+
+</python_feature_set>
+</python>
+</rules>

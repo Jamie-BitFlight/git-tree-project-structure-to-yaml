@@ -1,0 +1,64 @@
+name: Test
+
+env:
+  # Enable colored output for pytest
+  # https://github.com/pytest-dev/pytest/issues/7443
+  # https://github.com/actions/runner/issues/241
+  PY_COLORS: 1
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+# Limit concurrency by workflow/branch combination
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  python-tests:
+    name: python-${{ matrix.python-version }}, ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+        python-version:
+          - "3.11"
+          - "3.12"
+
+      fail-fast: false
+
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v6
+  
+      - name: Run tests
+        run: |
+          # Run tests with coverage reporting
+          # uv run automatically installs dependencies from pyproject.toml before running
+          uv run --python ${{ matrix.python-version }} -- pytest tests -v --cov=git_tree_project_structure_to_yaml --cov-report=xml
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        # Optional: don't fail the workflow if coverage upload fails
+        continue-on-error: true
