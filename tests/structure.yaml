@@ -1,2 +1,30 @@
-# No matching files found
-[]
+git-tree-project-structure-to-yaml/:
+  - .github/:
+    - workflows/:
+      - build.yaml
+      - check.yaml
+      - release.yaml
+      - test.yaml
+  - .gitignore
+  - .markdownlint.json
+  - .python-version
+  - .windsurfrules
+  - LICENSE
+  - README.md
+  - _typos.toml
+  - biome.json
+  - bun.lock
+  - package.json
+  - pyproject.toml
+  - scripts/:
+    - version
+  - src/:
+    - git_tree_project_structure_to_yaml/:
+      - __init__.py
+      - _cli.py
+  - tests/:
+    - __init__.py
+    - cli/:
+      - test_yaml_tree.py
+    - structure.yaml
+  - uv.lock
