@@ -65,6 +65,13 @@
    - Updated test imports to use new module structure
    - All 46 tests pass
 
+5. **Quality Enforcement** (completed)
+   - Removed unnecessary mypy `disable_error_code = "call-arg"` suppression
+   - Fixed unused imports in tests (Mock, patch were unused)
+   - Updated pre-commit ruff version to match pyproject.toml (v0.14.0)
+   - Applied ruff formatting fixes across all source files
+   - Ran pre-commit hooks before commit (all pass)
+
 ---
 
 ## Final Metrics
@@ -122,22 +129,30 @@ None - All modernization tasks complete.
 |---------|------|----------|-----------------|-------|
 | 1 | 2026-01-19 | ~30 min | Phase 1 (3 tasks) | Architecture, Dependencies, Technical Debt |
 | 2 | 2026-01-19 | ~45 min | Phases 2 & 3 (7 tasks) | Code quality, 98% coverage |
-| 3 | 2026-01-19 | ~20 min | Extended (4 tasks) | Param rename, upgrades, module split |
+| 3 | 2026-01-19 | ~20 min | Extended (5 tasks) | Param rename, upgrades, module split, quality enforcement |
 
 ---
 
 ## Validation Gates (Final)
 
 ```
-$ uv run ruff check src/
+$ pre-commit run --all-files
+sync-pre-commit-deps.....................................................Passed
+check for case conflicts.................................................Passed
+check for merge conflicts................................................Passed
+check toml...............................................................Passed
+ruff (legacy alias)......................................................Passed
+ruff format..............................................................Passed
+
+$ uv run ruff check src/ tests/
 All checks passed!
 
 $ uv run mypy src/
 Success: no issues found in 7 source files
 
-$ uv run pytest tests/ -q
+$ uv run pytest tests/ -q --cov=src
 ..............................................
-46 passed in 1.09s
+46 passed, 98% coverage
 ```
 
-All gates pass. Modernization complete.
+All gates pass. Modernization complete with no suppressions.
