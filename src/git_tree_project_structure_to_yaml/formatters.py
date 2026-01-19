@@ -29,7 +29,7 @@ def path_node_formatter(node: Node[Path]) -> str:
 
 
 def indent_string(
-    string: str, indent_count: int = 0, indent_width: int = 2, indent_type: IndentType = IndentType.SPACES,
+    string: str, indent_count: int = 0, indent_width: int = 2, indent_type: IndentType = IndentType.SPACES
 ) -> str:
     """Indent a string with a specified number of spaces or tabs.
 
@@ -134,11 +134,7 @@ def generate_tree_structure(tree: Tree[Path]) -> str:
     Returns:
         str: String containing the tree representation with ASCII/Unicode branch characters
     """
-    return tree.format(
-        style="lines32",
-        repr=path_node_formatter,
-        title=False,
-    )
+    return tree.format(style="lines32", repr=path_node_formatter, title=False)
 
 
 def generate_yaml_output(tree: Tree[Path]) -> str:
@@ -154,8 +150,4 @@ def generate_yaml_output(tree: Tree[Path]) -> str:
     Returns:
         str: String containing YAML representation of the tree
     """
-    return tree.format(
-        repr=yaml_formatter,
-        title=False,
-        style="list",
-    )
+    return tree.format(repr=yaml_formatter, title=False, style="list")

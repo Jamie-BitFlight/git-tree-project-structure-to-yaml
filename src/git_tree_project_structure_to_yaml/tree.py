@@ -60,12 +60,7 @@ def add_path_to_tree(tree: Tree[Path], path: Path, root: Path) -> None:
 
 
 def build_ls_files_args(
-    directory: Path,
-    exclude: set[str],
-    others: bool,
-    stage: bool,
-    cached: bool,
-    exclude_standard: bool,
+    directory: Path, exclude: set[str], others: bool, stage: bool, cached: bool, exclude_standard: bool
 ) -> list[str]:
     """Build arguments for git ls-files command.
 

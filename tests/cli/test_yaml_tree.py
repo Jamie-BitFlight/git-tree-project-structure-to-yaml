@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock
 
 import pytest
 import typer
@@ -10,11 +10,7 @@ import yaml
 from nutree import Tree
 
 from git_tree_project_structure_to_yaml._cli import main
-from git_tree_project_structure_to_yaml.formatters import (
-    generate_yaml_output,
-    indent_string,
-    path_node_formatter,
-)
+from git_tree_project_structure_to_yaml.formatters import generate_yaml_output, indent_string, path_node_formatter
 from git_tree_project_structure_to_yaml.tree import (
     add_path_to_tree,
     build_ls_files_args,
@@ -22,11 +18,7 @@ from git_tree_project_structure_to_yaml.tree import (
     git_lsfiles_to_path_list,
 )
 from git_tree_project_structure_to_yaml.types import IndentType, OutputFormat
-from git_tree_project_structure_to_yaml.utils import (
-    empty_list_if_none,
-    generate_output_content,
-    resolve_repo_paths,
-)
+from git_tree_project_structure_to_yaml.utils import empty_list_if_none, generate_output_content, resolve_repo_paths
 from git_tree_project_structure_to_yaml.validators import (
     validate_and_return_path,
     validate_and_return_repo,
@@ -366,12 +358,7 @@ class TestBuildLsFilesArgs:
     def test_build_args_with_others_flag(self) -> None:
         """Test building args with --others flag."""
         args = build_ls_files_args(
-            directory=Path("/test"),
-            exclude=set(),
-            others=True,
-            stage=False,
-            cached=False,
-            exclude_standard=False,
+            directory=Path("/test"), exclude=set(), others=True, stage=False, cached=False, exclude_standard=False
         )
 
         assert "--others" in args
@@ -383,12 +370,7 @@ class TestBuildLsFilesArgs:
     def test_build_args_with_stage_flag(self) -> None:
         """Test building args with --stage flag."""
         args = build_ls_files_args(
-            directory=Path("/test"),
-            exclude=set(),
-            others=False,
-            stage=True,
-            cached=False,
-            exclude_standard=False,
+            directory=Path("/test"), exclude=set(), others=False, stage=True, cached=False, exclude_standard=False
         )
 
         assert "--stage" in args
@@ -398,12 +380,7 @@ class TestBuildLsFilesArgs:
     def test_build_args_with_cached_flag(self) -> None:
         """Test building args with --cached flag."""
         args = build_ls_files_args(
-            directory=Path("/test"),
-            exclude=set(),
-            others=False,
-            stage=False,
-            cached=True,
-            exclude_standard=False,
+            directory=Path("/test"), exclude=set(), others=False, stage=False, cached=True, exclude_standard=False
         )
 
         assert "--cached" in args
@@ -411,12 +388,7 @@ class TestBuildLsFilesArgs:
     def test_build_args_with_exclude_standard(self) -> None:
         """Test building args with --exclude-standard flag."""
         args = build_ls_files_args(
-            directory=Path("/test"),
-            exclude=set(),
-            others=False,
-            stage=False,
-            cached=False,
-            exclude_standard=True,
+            directory=Path("/test"), exclude=set(), others=False, stage=False, cached=False, exclude_standard=True
         )
 
         assert "--exclude-standard" in args
@@ -437,12 +409,7 @@ class TestBuildLsFilesArgs:
     def test_build_args_with_all_options(self) -> None:
         """Test building args with all options enabled."""
         args = build_ls_files_args(
-            directory=Path("/test/dir"),
-            exclude={"*.log"},
-            others=True,
-            stage=True,
-            cached=True,
-            exclude_standard=True,
+            directory=Path("/test/dir"), exclude={"*.log"}, others=True, stage=True, cached=True, exclude_standard=True
         )
 
         assert "--others" in args
@@ -484,6 +451,7 @@ class TestValidateAndReturnRepo:
         """Test that a valid git repo path returns a Repo object."""
         # Create a git repo
         from git import Repo
+
         repo_path = tmp_path / "test_repo"
         repo_path.mkdir()
         Repo.init(repo_path)
@@ -732,6 +700,7 @@ class TestMainFunction:
 
         # Change to repo directory and run main
         import os
+
         original_cwd = os.getcwd()
         try:
             os.chdir(repo_path)
@@ -771,6 +740,7 @@ class TestMainFunction:
         output_file = tmp_path / "output.txt"
 
         import os
+
         original_cwd = os.getcwd()
         try:
             os.chdir(repo_path)
@@ -808,6 +778,7 @@ class TestMainFunction:
         output_file = tmp_path / "output.yaml"
 
         import os
+
         original_cwd = os.getcwd()
         try:
             os.chdir(repo_path)
@@ -849,6 +820,7 @@ class TestMainFunction:
         output_file = tmp_path / "output.yaml"
 
         import os
+
         original_cwd = os.getcwd()
         try:
             os.chdir(repo_path)
@@ -888,6 +860,7 @@ class TestMainFunction:
         output_file = tmp_path / "output.yaml"
 
         import os
+
         original_cwd = os.getcwd()
         try:
             os.chdir(repo_path)
@@ -923,6 +896,7 @@ class TestMainFunction:
         repo.index.commit("Initial commit")
 
         import os
+
         original_cwd = os.getcwd()
         try:
             os.chdir(repo_path)

@@ -60,9 +60,7 @@ def resolve_repo_paths(repo_paths: list[Path], root_node: Path) -> set[Path]:
     return relative_repo_paths
 
 
-def generate_output_content(
-    tree: Tree[Path], output_format: OutputFormat, options_set: set[str],
-) -> str:
+def generate_output_content(tree: Tree[Path], output_format: OutputFormat, options_set: set[str]) -> str:
     """Generate output content based on the requested format.
 
     Args:

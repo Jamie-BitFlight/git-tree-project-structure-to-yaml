@@ -119,12 +119,10 @@ keep-runtime-typing = true
 python_version = "3.12"
 strict_equality = true
 extra_checks = true
-# Start off with these
 warn_unused_configs = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 ignore_missing_imports = true
-disable_error_code = "call-arg"
 
 [tool.pyright]
 exclude = [

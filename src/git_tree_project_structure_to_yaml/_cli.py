@@ -50,19 +50,19 @@ def main(
         ),
     ] = None,
     output: Annotated[
-        Path | None, typer.Option("-o", "--output", help="Output file (default: print to stdout)"),
+        Path | None, typer.Option("-o", "--output", help="Output file (default: print to stdout)")
     ] = None,
     output_format: Annotated[OutputFormat, typer.Option("-f", "--format", help="Output format")] = OutputFormat.YAML,
     verbose: Annotated[bool, typer.Option("-v", "--verbose", help="Enable verbose output")] = False,
     exclude: Annotated[
-        list[str] | None, typer.Option("-x", "--exclude", help="Patterns to exclude (can be used multiple times)"),
+        list[str] | None, typer.Option("-x", "--exclude", help="Patterns to exclude (can be used multiple times)")
     ] = None,
     others: Annotated[bool, typer.Option("--others", help="Show untracked files in the output")] = True,
     stage: Annotated[bool, typer.Option("--stage", help="Show staged files in the output")] = True,
     cached: Annotated[bool, typer.Option("--cached", help="Show cached/tracked files in the output")] = False,
     exclude_standard: Annotated[bool, typer.Option("--exclude-standard", help="Use standard Git exclusions")] = True,
     repo_as_root: Annotated[
-        bool, typer.Option("--repo-as-root", help="Use the repository root as the root directory"),
+        bool, typer.Option("--repo-as-root", help="Use the repository root as the root directory")
     ] = True,
 ) -> None:
     """Generate YAML or compact text from Git repository structure.
@@ -72,7 +72,7 @@ def main(
     and outputs the result in the requested format.
     """
     logging.basicConfig(
-        level=logging.DEBUG if verbose else logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stderr,
+        level=logging.DEBUG if verbose else logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stderr
     )
     current_dir = Path.cwd()
 
@@ -86,9 +86,14 @@ def main(
 
     exclude_set = set(empty_list_if_none(exclude))
     options_set = {
-        opt for opt, flag in [
-            ("--others", others), ("--stage", stage), ("--cached", cached), ("--exclude-standard", exclude_standard),
-        ] if flag
+        opt
+        for opt, flag in [
+            ("--others", others),
+            ("--stage", stage),
+            ("--cached", cached),
+            ("--exclude-standard", exclude_standard),
+        ]
+        if flag
     }
 
     try:
