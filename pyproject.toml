@@ -7,10 +7,8 @@ requires-python = ">=3.12"
 dependencies = [
     "gitpython>=3.1.44",
     "nutree>=1.1.0",
-    "packaging>=25.0",
-    "pydantic>=2.11.4",
     "pyyaml>=6.0.2",
-    "typer>=0.15.4",
+    "typer>=0.21.0",
     "types-pyyaml>=6.0.12.20250516",
 ]
 
@@ -20,10 +18,10 @@ git-tree-project-structure-to-yaml = "git_tree_project_structure_to_yaml:app"
 [dependency-groups]
 dev = [
     "inline-snapshot>=0.23.0",
-    "mypy>=1.15.0",
-    "pytest>=8.3.5",
+    "mypy>=1.19.0",
+    "pytest>=9.0.0",
     "pytest-cov>=6.1.1",
-    "ruff>=0.11.10",
+    "ruff>=0.14.0",
     "ty>=0.0.1a5",
 ]
 release = ["rooster-blue"]
@@ -120,13 +118,11 @@ keep-runtime-typing = true
 [tool.mypy]
 python_version = "3.12"
 strict_equality = true
-strict_concatenate = true
-# Start off with these
+extra_checks = true
 warn_unused_configs = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 ignore_missing_imports = true
-disable_error_code = "call-arg"
 
 [tool.pyright]
 exclude = [

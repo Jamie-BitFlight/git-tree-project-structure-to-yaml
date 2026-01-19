@@ -163,28 +163,32 @@ graph TD
 
 | Import Statement | Line | Symbols Used |
 |-----------------|------|--------------|
-| `from __future__ import annotations` | 31 | Postponed annotation evaluation |
-| `import logging` | 33 | `logging.getLogger`, `logging.basicConfig`, `logging.DEBUG`, `logging.INFO` |
-| `import sys` | 34 | `sys.stderr` |
-| `from enum import StrEnum, auto` | 35 | `StrEnum`, `auto` |
-| `from pathlib import Path` | 36 | `Path` (used extensively) |
-| `from typing import Annotated, TypeVar` | 37 | `Annotated`, `TypeVar` |
+| `from __future__ import annotations` | 30 | Postponed annotation evaluation |
+| `import logging` | 32 | `logging.getLogger`, `logging.basicConfig`, `logging.DEBUG`, `logging.INFO` |
+| `import sys` | 33 | `sys.stderr` |
+| `from enum import StrEnum, auto` | 34 | `StrEnum`, `auto` |
+| `from pathlib import Path` | 35 | `Path` (used extensively) |
+| `from typing import Annotated, TypeVar` | 36 | `Annotated`, `TypeVar` |
 
 #### External Package Imports
 
 | Import Statement | Line | Package | Symbols Used |
 |-----------------|------|---------|--------------|
-| `import typer` | 39 | typer | `Typer`, `Argument`, `Option`, `Exit`, `echo` |
-| `from git import Repo` | 40 | gitpython | `Repo` |
-| `from git.exc import InvalidGitRepositoryError, NoSuchPathError` | 41 | gitpython | Exception classes |
-| `from nutree import Node, Tree` | 42 | nutree | `Node`, `Tree` |
+| `import typer` | 38 | typer | `Typer`, `Argument`, `Option`, `Exit`, `echo` |
+| `from git import Repo` | 39 | gitpython | `Repo` |
+| `from git.exc import InvalidGitRepositoryError, NoSuchPathError` | 40 | gitpython | Exception classes |
+| `from nutree import Node, Tree` | 41 | nutree | `Node`, `Tree` |
 
 **Exports** (Public API):
 - `app` - Typer application instance
 - `main` - CLI command function
 - `IndentType` - Enum for indentation types
 - `OutputFormat` - Enum for output formats
-- All helper functions (implicitly public)
+- `build_ls_files_args` - Git command argument builder
+- `resolve_repo_paths` - Path resolution helper
+- `validate_directories` - Directory validation helper
+- `generate_output_content` - Output format handler
+- All other helper functions (implicitly public)
 
 ### Test Module: `test_yaml_tree.py`
 
@@ -222,9 +226,7 @@ graph TD
 | `nutree` | >=1.1.0 | `_cli.py`, tests | Tree data structure |
 | `typer` | >=0.15.4 | `_cli.py` | CLI framework |
 | `pyyaml` | >=6.0.2 | tests only | YAML parsing for test validation |
-| `packaging` | >=25.0 | **UNUSED** | Not imported anywhere |
-| `pydantic` | >=2.11.4 | **UNUSED** | Not imported anywhere |
-| `types-pyyaml` | >=6.0.12 | Type checking | Type stubs for pyyaml |
+| `types-pyyaml` | >=6.0.12.20250516 | Type checking | Type stubs for pyyaml |
 
 ### Development Dependencies
 
@@ -232,8 +234,8 @@ graph TD
 |---------|---------|---------|
 | `pytest` | >=8.3.5 | Testing framework |
 | `pytest-cov` | >=6.1.1 | Test coverage |
-| `mypy` | >=1.15.0 | Static type checking |
-| `ruff` | >=0.11.10 | Linting and formatting |
+| `mypy` | >=1.19.0 | Static type checking |
+| `ruff` | >=0.14.0 | Linting and formatting |
 | `inline-snapshot` | >=0.23.0 | Snapshot testing |
 | `ty` | >=0.0.1a5 | Type checking tool |
 
@@ -271,13 +273,13 @@ The only occurrence of `getattr` is in a documentation comment:
 |--------|-------|--------|
 | Circular dependencies | 0 | Good |
 | Dynamic imports | 0 | Good |
-| Unused declared dependencies | 2 | Needs attention |
+| Unused declared dependencies | 0 | Resolved |
 | Test-only runtime dependencies | 1 (pyyaml) | Consider moving to dev |
 | Internal module coupling | Low | Good |
 
 ## Recommendations
 
-1. **Remove unused dependencies**: `packaging` and `pydantic` are declared but never used.
+1. ~~**Remove unused dependencies**: `packaging` and `pydantic` are declared but never used.~~ - COMPLETED
 
 2. **Consider moving `pyyaml` to dev dependencies**: It's only used in tests for YAML validation.
 
@@ -286,4 +288,4 @@ The only occurrence of `getattr` is in a documentation comment:
    - `formatters.py` would depend on `nutree`
    - `cli.py` would depend on `typer`
 
-4. **Add `__all__` to `_cli.py`**: Currently there's no explicit public API definition, which could lead to unintended coupling.
+4. **Add `__all__` to `_cli.py`**: The `__init__.py` now has `__all__` defined, but `_cli.py` itself lacks an explicit public API definition which could lead to unintended coupling.
