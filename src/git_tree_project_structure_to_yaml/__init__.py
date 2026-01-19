@@ -1,7 +1,7 @@
 
 from __future__ import annotations
 
-from ._cli import app as app
+from ._cli import app
 
 __all__ = [
     "app",
