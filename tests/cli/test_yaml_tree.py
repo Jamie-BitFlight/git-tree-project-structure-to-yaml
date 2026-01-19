@@ -43,7 +43,7 @@ def get_indentation_level(line: str) -> int:
 
 
 class TestPathNodeFormatter:
-    def test_format_file(self):
+    def test_format_file(self) -> None:
         """Test formatting a file node (no trailing slash)."""
         # Create a node with a Path object representing a file
         tree = Tree("Test Tree")
@@ -53,7 +53,7 @@ class TestPathNodeFormatter:
         result = path_node_formatter(node)
         assert result == "test_file.txt"
 
-    def test_format_directory(self, mock_path_is_dir):
+    def test_format_directory(self, mock_path_is_dir) -> None:
         """Test formatting a directory node (with trailing slash)."""
         with pytest.MonkeyPatch.context() as mp:
             # Use fixture to mock Path.is_dir to identify our test path as a directory
@@ -70,7 +70,7 @@ class TestPathNodeFormatter:
 
 
 class TestGenerateYamlOutput:
-    def test_basic_yaml_conversion(self, mock_path_is_dir):
+    def test_basic_yaml_conversion(self, mock_path_is_dir) -> None:
         """Test basic tree to YAML conversion with properly mocked file paths."""
         # Create a temp directory for proper Path objects with is_dir() behavior
         with pytest.MonkeyPatch.context() as mp:
@@ -88,8 +88,6 @@ class TestGenerateYamlOutput:
             result = generate_yaml_output(tree)
 
             # Print actual result for debugging
-            print(f"\nGenerated YAML output: {result!r}")
-            print(f"Lines: {list(result.strip().split('\n'))}")
 
             # Verify basic content presence
             assert isinstance(result, str)
@@ -126,7 +124,7 @@ class TestGenerateYamlOutput:
                 file_indent = len(file_line) - len(file_line.lstrip())
                 assert file_indent > root_indent, f"File {file_line} not properly indented relative to root"
 
-    def test_nested_yaml_structure(self, mock_path_is_dir):
+    def test_nested_yaml_structure(self, mock_path_is_dir) -> None:
         """Test conversion of nested structures to YAML."""
         # Create a tree with nested structure using mocked Path objects
         with pytest.MonkeyPatch.context() as mp:
@@ -143,8 +141,6 @@ class TestGenerateYamlOutput:
 
             # Convert to YAML string
             result = generate_yaml_output(tree)
-            print("\nNested structure output:")
-            print(repr(result))
 
             # Verify we have valid YAML output
             parsed_yaml = verify_yaml_output(result)
@@ -183,7 +179,7 @@ class TestGenerateYamlOutput:
                 nested_indent = get_indentation_level(lines[idx])
                 assert nested_indent > dir1_indent, "Nested file not properly indented relative to dir1"
 
-    def test_deep_nesting_indentation(self, mock_path_is_dir):
+    def test_deep_nesting_indentation(self, mock_path_is_dir) -> None:
         """Test indentation with deeply nested directories."""
         with pytest.MonkeyPatch.context() as mp:
             # Mock is_dir to identify directories correctly
@@ -200,8 +196,6 @@ class TestGenerateYamlOutput:
 
             # Convert to YAML string
             result = generate_yaml_output(tree)
-            print("\nDeep nesting output:")
-            print(result)
 
             # Verify the output is valid YAML
             verify_yaml_output(result)
@@ -228,7 +222,7 @@ class TestGenerateYamlOutput:
                 "deep_file should be indented more than level3"
             )
 
-    def test_empty_tree_conversion(self):
+    def test_empty_tree_conversion(self) -> None:
         """Test conversion of an empty tree."""
         # Create an empty tree
         tree = Tree[Path]("Empty Tree")

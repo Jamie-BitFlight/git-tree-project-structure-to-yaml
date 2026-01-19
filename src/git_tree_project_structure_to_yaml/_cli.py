@@ -1,6 +1,5 @@
 #!/usr/bin/env python3.12
-"""
-Git Directory Structure to YAML or Tree Output Generator.
+"""Git Directory Structure to YAML or Tree Output Generator.
 
 This module provides functionality similar to the 'tree' command on Linux or the Get-Tree cmdlet on Windows,
 but specifically designed for Git repositories. It generates either YAML or compact text representations
@@ -83,8 +82,7 @@ class OutputFormat(StrEnum):
 
 
 def path_node_formatter(node: Node[Path]) -> str:
-    """
-    Format a Path node for display in the tree format output.
+    """Format a Path node for display in the tree format output.
 
     Formats the node name for display, adding a trailing slash to directories
     to visually distinguish them from files.
@@ -103,8 +101,7 @@ def path_node_formatter(node: Node[Path]) -> str:
 
 
 def git_lsfiles_to_path_list(repo: Repo, *args: str) -> list[Path]:
-    """
-    Convert Git ls-files output to a list of Path objects.
+    """Convert Git ls-files output to a list of Path objects.
 
     Executes the git ls-files command with the provided arguments and converts
     the output into a list of absolute Path objects relative to the repository root.
@@ -121,8 +118,7 @@ def git_lsfiles_to_path_list(repo: Repo, *args: str) -> list[Path]:
     """
     root_path = Path(repo.git_dir).parent
     try:
-        paths = [root_path / line.rsplit("\t", 1)[-1] for line in repo.git.ls_files(*args).splitlines()]
-        return paths
+        return [root_path / line.rsplit("\t", 1)[-1] for line in repo.git.ls_files(*args).splitlines()]
     except Exception as e:
         typer.echo(f"Git command failed: {e}", err=True)
         raise typer.Exit(code=1) from e
@@ -136,7 +132,6 @@ def add_path_to_tree(tree: Tree[Path], path: Path, root: Path) -> None:
     node even when it already exists. Instead we search, then add only if
     nothing was found.
     """
-
     # Get or create the root node representing *root*
     root_node = next((n for n in tree.children if n.data == root), None)
     if root_node is None:
@@ -163,8 +158,7 @@ def build_tree_from_git(
     cached: bool = False,
     exclude_standard: bool = True,
 ) -> Tree[Path]:
-    """
-    Build a tree structure from Git repository using GitPython and nutree.
+    """Build a tree structure from Git repository using GitPython and nutree.
 
     Creates a hierarchical tree representation of files and directories in a Git repository,
     with filtering options for different Git file states (staged, cached, untracked) and
@@ -192,7 +186,7 @@ def build_tree_from_git(
     logger.debug("Root node: %s", root_node)
 
     relative_root = git_root_path.relative_to(root_node)
-    if relative_root == Path("."):
+    if relative_root == Path():
         relative_root = relative_root.absolute()
     root_dir_name = relative_root.name
 
@@ -238,8 +232,7 @@ def build_tree_from_git(
 
 
 def generate_tree_structure(tree: Tree[Path]) -> str:
-    """
-    Generate a text representation of the directory structure similar to the Unix 'tree' command.
+    """Generate a text representation of the directory structure similar to the Unix 'tree' command.
 
     Creates a formatted string representation of the tree structure with ASCII/Unicode
     branch characters, similar to the output of the Unix 'tree' command. Files and
@@ -260,10 +253,9 @@ def generate_tree_structure(tree: Tree[Path]) -> str:
 
 
 def indent_string(
-    string: str, indent_count: int = 0, indent_width: int = 2, indent_type: IndentType = IndentType.SPACES
+    string: str, indent_count: int = 0, indent_width: int = 2, indent_type: IndentType = IndentType.SPACES,
 ) -> str:
-    """
-    Indent a string with a specified number of spaces or tabs.
+    """Indent a string with a specified number of spaces or tabs.
 
     Adds indentation to the beginning of a string using either spaces or tabs,
     based on the specified indentation type and count.
@@ -284,8 +276,7 @@ def indent_string(
 
 
 def node_depth(node: Node[Path]) -> int:
-    """
-    Calculate the depth of a node in the tree hierarchy.
+    """Calculate the depth of a node in the tree hierarchy.
 
     Counts the number of parent nodes between the given node and the root.
     The root node has a depth of 0, its children have a depth of 1, etc.
@@ -305,8 +296,7 @@ def node_depth(node: Node[Path]) -> int:
 
 
 def get_suffix(node: Node[Path]) -> str:
-    """
-    Get the appropriate suffix for a node based on its type.
+    """Get the appropriate suffix for a node based on its type.
 
     Adds a colon suffix to directory nodes for proper YAML formatting.
 
@@ -321,8 +311,7 @@ def get_suffix(node: Node[Path]) -> str:
 
 
 def yaml_formatter(node: Node[Path]) -> str:
-    """
-    Format a node for YAML output with proper indentation and type indicators.
+    """Format a node for YAML output with proper indentation and type indicators.
 
     Combines the node name, prefix (indentation), and suffix (type indicator)
     to create a properly formatted YAML line for the node.
@@ -344,8 +333,7 @@ def yaml_formatter(node: Node[Path]) -> str:
 
 
 def get_prefix(node: Node[Path], indent_width: int = 2, indent_type: IndentType = IndentType.SPACES) -> str:
-    """
-    Get the appropriate prefix (indentation) for a node based on its depth in the tree.
+    """Get the appropriate prefix (indentation) for a node based on its depth in the tree.
 
     Calculates the indentation level based on the node's depth in the tree
     and returns the appropriate prefix string with a dash and space.
@@ -363,8 +351,7 @@ def get_prefix(node: Node[Path], indent_width: int = 2, indent_type: IndentType 
 
 
 def generate_yaml_output(tree: Tree[Path]) -> str:
-    """
-    Generate YAML output from the tree structure using nutree's native formatter.
+    """Generate YAML output from the tree structure using nutree's native formatter.
 
     Creates a YAML representation of the tree structure, with proper indentation
     and formatting to represent the hierarchical structure of files and directories.
@@ -384,8 +371,7 @@ def generate_yaml_output(tree: Tree[Path]) -> str:
 
 
 def validate_and_return_repo(path: Path) -> Repo:
-    """
-    Validate a path as a Git repository and return the Repo object.
+    """Validate a path as a Git repository and return the Repo object.
 
     Attempts to create a GitPython Repo object from the given path,
     searching parent directories if necessary. Exits with an error
@@ -403,16 +389,15 @@ def validate_and_return_repo(path: Path) -> Repo:
     try:
         return Repo(path, search_parent_directories=True)
     except InvalidGitRepositoryError as e:
-        logger.error("Error: Path '%s' is not a valid Git repository: %s", path, e)
+        logger.exception("Error: Path '%s' is not a valid Git repository: %s", path, e)
         raise typer.Exit(code=1) from e
     except NoSuchPathError as e:
-        logger.error("Error: Path '%s' does not exist: %s", path, e)
+        logger.exception("Error: Path '%s' does not exist: %s", path, e)
         raise typer.Exit(code=1) from e
 
 
 def validate_and_return_path(path: Path) -> Path:
-    """
-    Validate that a path exists and return its resolved form.
+    """Validate that a path exists and return its resolved form.
 
     Attempts to resolve the given path and verify that it exists on the filesystem.
     Exits with an error if the path does not exist.
@@ -429,7 +414,7 @@ def validate_and_return_path(path: Path) -> Path:
     try:
         return Path(path).resolve(strict=True)
     except FileNotFoundError as e:
-        logger.error("Error: Path '%s' does not exist", path)
+        logger.exception("Error: Path '%s' does not exist", path)
         raise typer.Exit(code=1) from e
 
 
@@ -437,8 +422,7 @@ T = TypeVar("T")
 
 
 def empty_list_if_none[T](value: list[T] | None) -> list[T]:
-    """
-    Return an empty list if the input value is None, otherwise return the input value.
+    """Return an empty list if the input value is None, otherwise return the input value.
 
     A utility function to safely handle potentially None list values by returning
     an empty list instead, avoiding NoneType errors in subsequent operations.
@@ -464,23 +448,22 @@ def main(
         ),
     ] = None,
     output: Annotated[
-        Path | None, typer.Option("-o", "--output", help="Output file (default: print to stdout)")
+        Path | None, typer.Option("-o", "--output", help="Output file (default: print to stdout)"),
     ] = None,
     format: Annotated[OutputFormat, typer.Option("-f", "--format", help="Output format")] = OutputFormat.YAML,
     verbose: Annotated[bool, typer.Option("-v", "--verbose", help="Enable verbose output")] = False,
     exclude: Annotated[
-        list[str] | None, typer.Option("-x", "--exclude", help="Patterns to exclude (can be used multiple times)")
+        list[str] | None, typer.Option("-x", "--exclude", help="Patterns to exclude (can be used multiple times)"),
     ] = None,
     others: Annotated[bool, typer.Option("--others", help="Show untracked files in the output")] = True,
     stage: Annotated[bool, typer.Option("--stage", help="Show staged files in the output")] = True,
     cached: Annotated[bool, typer.Option("--cached", help="Show cached/tracked files in the output")] = False,
     exclude_standard: Annotated[bool, typer.Option("--exclude-standard", help="Use standard Git exclusions")] = True,
     repo_as_root: Annotated[
-        bool, typer.Option("--repo-as-root", help="Use the repository root as the root directory")
+        bool, typer.Option("--repo-as-root", help="Use the repository root as the root directory"),
     ] = True,
 ) -> None:
-    """
-    Generate YAML or compact text from Git repository structure.
+    """Generate YAML or compact text from Git repository structure.
 
     Main entry point for the CLI application. Processes command-line arguments,
     validates inputs, builds a tree representation of the Git repository structure,
@@ -507,7 +490,7 @@ def main(
     """
     # Configure logging level and direct all logs to stderr
     logging.basicConfig(
-        level=logging.DEBUG if verbose else logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stderr
+        level=logging.DEBUG if verbose else logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stderr,
     )
     current_dir = Path.cwd()
 
@@ -536,7 +519,7 @@ def main(
                 logger.debug("Successfully made relative: %s", rel_path)
                 relative_repo_paths.add(rel_path)
             except ValueError as e:
-                logger.error("Error making path relative: %s - %s", path_obj, e)
+                logger.exception("Error making path relative: %s - %s", path_obj, e)
                 # You could either skip this path or use a different approach
                 # For debugging, we'll try to continue with the original path
                 logger.debug("Using original path instead: %s", path_obj)
@@ -599,10 +582,10 @@ def main(
                 f.write(output_content)
             logger.info("Output written to %s", output)
         else:
-            print(output_content)
+            pass
 
     except Exception as e:
-        logger.error("An error occurred: %s", e)
+        logger.exception("An error occurred: %s", e)
         raise typer.Exit(code=1) from None
 
 
