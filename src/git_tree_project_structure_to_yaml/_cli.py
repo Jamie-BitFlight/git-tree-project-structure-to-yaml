@@ -111,7 +111,7 @@ def main(
         output_content = generate_output_content(tree, output_format, options_set)
 
         if output:
-            with open(output, "w") as f:
+            with open(output, "w", encoding="utf-8") as f:
                 f.write(output_content)
             logger.info("Output written to %s", output)
 
