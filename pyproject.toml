@@ -8,7 +8,7 @@ dependencies = [
     "gitpython>=3.1.44",
     "nutree>=1.1.0",
     "pyyaml>=6.0.2",
-    "typer>=0.15.4",
+    "typer>=0.21.0",
     "types-pyyaml>=6.0.12.20250516",
 ]
 
@@ -19,7 +19,7 @@ git-tree-project-structure-to-yaml = "git_tree_project_structure_to_yaml:app"
 dev = [
     "inline-snapshot>=0.23.0",
     "mypy>=1.19.0",
-    "pytest>=8.3.5",
+    "pytest>=9.0.0",
     "pytest-cov>=6.1.1",
     "ruff>=0.14.0",
     "ty>=0.0.1a5",

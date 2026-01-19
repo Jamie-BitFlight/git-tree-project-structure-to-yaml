@@ -9,20 +9,25 @@ import typer
 import yaml
 from nutree import Tree
 
-from git_tree_project_structure_to_yaml._cli import (
-    IndentType,
-    OutputFormat,
+from git_tree_project_structure_to_yaml._cli import main
+from git_tree_project_structure_to_yaml.formatters import (
+    generate_yaml_output,
+    indent_string,
+    path_node_formatter,
+)
+from git_tree_project_structure_to_yaml.tree import (
     add_path_to_tree,
     build_ls_files_args,
     build_tree_from_git,
+    git_lsfiles_to_path_list,
+)
+from git_tree_project_structure_to_yaml.types import IndentType, OutputFormat
+from git_tree_project_structure_to_yaml.utils import (
     empty_list_if_none,
     generate_output_content,
-    generate_yaml_output,
-    git_lsfiles_to_path_list,
-    indent_string,
-    main,
-    path_node_formatter,
     resolve_repo_paths,
+)
+from git_tree_project_structure_to_yaml.validators import (
     validate_and_return_path,
     validate_and_return_repo,
     validate_directories,
@@ -734,7 +739,7 @@ class TestMainFunction:
                 repo_paths=None,
                 repo_path=repo_path,
                 output=output_file,
-                format=OutputFormat.YAML,
+                output_format=OutputFormat.YAML,
                 verbose=False,
                 exclude=None,
                 others=False,
@@ -773,7 +778,7 @@ class TestMainFunction:
                 repo_paths=None,
                 repo_path=repo_path,
                 output=output_file,
-                format=OutputFormat.TREE,
+                output_format=OutputFormat.TREE,
                 verbose=False,
                 exclude=None,
                 others=False,
@@ -811,7 +816,7 @@ class TestMainFunction:
                 repo_paths=None,
                 repo_path=repo_path,
                 output=output_file,
-                format=OutputFormat.YAML,
+                output_format=OutputFormat.YAML,
                 verbose=True,
                 exclude=None,
                 others=False,
@@ -851,7 +856,7 @@ class TestMainFunction:
                 repo_paths=None,
                 repo_path=repo_path,
                 output=output_file,
-                format=OutputFormat.YAML,
+                output_format=OutputFormat.YAML,
                 verbose=False,
                 exclude=["*.log"],
                 others=False,
@@ -890,7 +895,7 @@ class TestMainFunction:
                 repo_paths=[subdir],
                 repo_path=repo_path,
                 output=output_file,
-                format=OutputFormat.YAML,
+                output_format=OutputFormat.YAML,
                 verbose=False,
                 exclude=None,
                 others=False,
@@ -926,7 +931,7 @@ class TestMainFunction:
                 repo_paths=None,
                 repo_path=repo_path,
                 output=None,
-                format=OutputFormat.YAML,
+                output_format=OutputFormat.YAML,
                 verbose=False,
                 exclude=None,
                 others=False,
