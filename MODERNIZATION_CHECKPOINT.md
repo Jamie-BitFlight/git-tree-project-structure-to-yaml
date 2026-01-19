@@ -87,6 +87,11 @@
 2. **Python Version Matrix Alignment** (completed)
    - Project requires `>=3.12` but CI tested Python 3.11
    - Updated `.github/workflows/test.yaml` matrix from `[3.11, 3.12]` to `[3.12, 3.13]`
+
+3. **UTF-8 Encoding for File Output** (completed)
+   - Tree format uses Unicode box-drawing characters (├, └, etc.)
+   - Windows default cp1252 encoding cannot encode these characters
+   - Added explicit `encoding="utf-8"` to file write in `_cli.py`
    - All CI jobs should now pass
 
 ---
@@ -147,7 +152,7 @@ None - All modernization tasks complete.
 | 1 | 2026-01-19 | ~30 min | Phase 1 (3 tasks) | Architecture, Dependencies, Technical Debt |
 | 2 | 2026-01-19 | ~45 min | Phases 2 & 3 (7 tasks) | Code quality, 98% coverage |
 | 3 | 2026-01-19 | ~20 min | Extended (5 tasks) | Param rename, upgrades, module split, quality enforcement |
-| 4 | 2026-01-19 | ~10 min | CI fixes (2 tasks) | Windows path compatibility, Python version matrix alignment |
+| 4 | 2026-01-19 | ~15 min | CI fixes (3 tasks) | Windows path compatibility, Python version matrix, UTF-8 encoding |
 
 ---
 
