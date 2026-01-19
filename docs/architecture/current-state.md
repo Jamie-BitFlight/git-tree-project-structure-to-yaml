@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This project is a command-line tool that generates YAML or tree-style representations of Git repository file structures. It follows a **monolithic single-module architecture** where all functionality resides in a single CLI module (`_cli.py`). The codebase is small (approximately 611 lines of Python) and uses Typer for CLI handling, GitPython for repository interaction, and nutree for tree data structure management.
+This project is a command-line tool that generates YAML or tree-style representations of Git repository file structures. It follows a **monolithic single-module architecture** where all functionality resides in a single CLI module (`_cli.py`). The codebase is small (approximately 621 lines of Python) and uses Typer for CLI handling, GitPython for repository interaction, and nutree for tree data structure management.
 
 ## High-Level Architecture Overview
 
@@ -63,14 +63,14 @@ git-tree-project-structure-to-yaml = "git_tree_project_structure_to_yaml:app"
 
 The CLI is exposed via the `app` Typer instance, which is re-exported from `__init__.py`.
 
-### 2. CLI Configuration (`_cli.py:44-49`)
+### 2. CLI Configuration (`_cli.py:47-48`)
 
 ```python
 app = typer.Typer(pretty_exceptions_enable=True, help="Generate YAML or compact text from a Git repository")
 logger = logging.getLogger(__name__)
 ```
 
-### 3. Enumerations (`_cli.py:56-78`)
+### 3. Enumerations (`_cli.py:55-77`)
 
 - `IndentType`: SPACES, TABS - Controls output indentation
 - `OutputFormat`: YAML, TREE - Determines output format
@@ -79,26 +79,30 @@ logger = logging.getLogger(__name__)
 
 | Function | Lines | Responsibility |
 |----------|-------|----------------|
-| `path_node_formatter` | 85-102 | Format Path nodes for tree display |
-| `git_lsfiles_to_path_list` | 105-128 | Convert git ls-files output to Path objects |
-| `add_path_to_tree` | 131-153 | Add paths to tree without duplicates |
-| `build_tree_from_git` | 156-237 | Build tree structure from Git repository |
-| `generate_tree_structure` | 240-259 | Generate Unix tree-style output |
-| `generate_yaml_output` | 365-383 | Generate YAML-formatted output |
-| `validate_and_return_repo` | 386-410 | Validate path as Git repository |
-| `validate_and_return_path` | 413-433 | Validate and resolve file paths |
-| `main` | 455-606 | Main CLI entry point |
+| `path_node_formatter` | 84-100 | Format Path nodes for tree display |
+| `git_lsfiles_to_path_list` | 103-124 | Convert git ls-files output to Path objects |
+| `add_path_to_tree` | 127-148 | Add paths to tree without duplicates |
+| `build_ls_files_args` | 151-186 | Build arguments for git ls-files command |
+| `build_tree_from_git` | 189-238 | Build tree structure from Git repository |
+| `generate_tree_structure` | 241-259 | Generate Unix tree-style output |
+| `generate_yaml_output` | 360-377 | Generate YAML-formatted output |
+| `validate_and_return_repo` | 380-403 | Validate path as Git repository |
+| `validate_and_return_path` | 406-425 | Validate and resolve file paths |
+| `resolve_repo_paths` | 446-472 | Convert repository paths to relative paths |
+| `validate_directories` | 475-487 | Validate that all paths are directories |
+| `generate_output_content` | 490-509 | Generate output based on format |
+| `main` | 513-616 | Main CLI entry point |
 
 ### 5. Helper Functions
 
 | Function | Lines | Responsibility |
 |----------|-------|----------------|
-| `indent_string` | 262-283 | Create indentation strings |
-| `node_depth` | 286-304 | Calculate node depth in tree |
-| `get_suffix` | 307-320 | Get node suffix (: for dirs) |
-| `yaml_formatter` | 323-343 | Format node for YAML output |
-| `get_prefix` | 346-362 | Get node prefix with indentation |
-| `empty_list_if_none` | 439-452 | Convert None to empty list |
+| `indent_string` | 262-282 | Create indentation strings |
+| `node_depth` | 285-302 | Calculate node depth in tree |
+| `get_suffix` | 305-317 | Get node suffix (: for dirs) |
+| `yaml_formatter` | 320-339 | Format node for YAML output |
+| `get_prefix` | 342-357 | Get node prefix with indentation |
+| `empty_list_if_none` | 431-443 | Convert None to empty list |
 
 ## Architectural Layers
 
@@ -107,9 +111,9 @@ logger = logging.getLogger(__name__)
 **Modules**: `_cli.py` (partial)
 
 **Components**:
-- Typer CLI application and command definitions (`_cli.py:455-606`)
-- Output format enums (`_cli.py:68-78`)
-- Logging configuration (`_cli.py:509-511`)
+- Typer CLI application and command definitions (`_cli.py:513-616`)
+- Output format enums (`_cli.py:67-77`)
+- Logging configuration (`_cli.py:565-567`)
 
 **Technologies**: Typer (CLI framework)
 
@@ -118,9 +122,10 @@ logger = logging.getLogger(__name__)
 **Modules**: `_cli.py` (partial)
 
 **Components**:
-- Tree building logic (`build_tree_from_git`: lines 156-237)
-- Output generation (`generate_yaml_output`, `generate_tree_structure`)
+- Tree building logic (`build_tree_from_git`: lines 189-238)
+- Output generation (`generate_yaml_output`, `generate_tree_structure`, `generate_output_content`)
 - Node formatting functions
+- Path resolution (`resolve_repo_paths`, `validate_directories`)
 
 **Key Services**:
 - Git file listing and filtering
@@ -132,27 +137,26 @@ logger = logging.getLogger(__name__)
 **Modules**: `_cli.py` (partial)
 
 **Components**:
-- Git repository interaction (`git_lsfiles_to_path_list`: lines 105-128)
+- Git repository interaction (`git_lsfiles_to_path_list`: lines 103-124)
+- Git command building (`build_ls_files_args`: lines 151-186)
 - Path validation (`validate_and_return_repo`, `validate_and_return_path`)
 
 **Patterns**: Direct GitPython API usage (no repository abstraction)
 
 ### Infrastructure Layer
 
-**External Dependencies** (from `pyproject.toml:7-14`):
+**External Dependencies** (from `pyproject.toml:7-13`):
 - `gitpython>=3.1.44` - Git repository interaction
 - `nutree>=1.1.0` - Tree data structure
 - `typer>=0.15.4` - CLI framework
 - `pyyaml>=6.0.2` - YAML parsing (used in tests only)
-- `packaging>=25.0` - **Unused in codebase**
-- `pydantic>=2.11.4` - **Unused in codebase**
 - `types-pyyaml>=6.0.12.20250516` - Type stubs
 
 ## Design Patterns Identified
 
 ### 1. Command Pattern (via Typer)
 
-**Location**: `_cli.py:455`
+**Location**: `_cli.py:512-513`
 
 ```python
 @app.command()
@@ -161,11 +165,11 @@ def main(...) -> None:
 
 The `main` function acts as a command handler, encapsulating the entire execution logic.
 
-**Quality**: Good - Standard Typer pattern, but function is too large (150+ lines)
+**Quality**: Good - Standard Typer pattern. Recent refactoring extracted helper functions, reducing main to ~100 lines
 
 ### 2. Composite Pattern (via nutree Tree)
 
-**Location**: `_cli.py:131-153`
+**Location**: `_cli.py:127-148`
 
 ```python
 def add_path_to_tree(tree: Tree[Path], path: Path, root: Path) -> None:
@@ -182,23 +186,25 @@ The tree structure represents hierarchical file system paths.
 
 ### 3. Strategy Pattern (Implicit - Output Formats)
 
-**Location**: `_cli.py:582-594`
+**Location**: `_cli.py:490-509` (extracted to `generate_output_content`)
 
 ```python
-if format == OutputFormat.YAML:
-    yaml_content = generate_yaml_output(tree)
-    # ...
-else:  # tree format
-    output_content = generate_tree_structure(tree)
+def generate_output_content(
+    tree: Tree[Path], output_format: OutputFormat, options_set: set[str],
+) -> str:
+    if output_format == OutputFormat.YAML:
+        yaml_content = generate_yaml_output(tree)
+        # ...
+    return generate_tree_structure(tree)
 ```
 
 Different output strategies selected based on format flag.
 
-**Quality**: Needs Improvement - Could be refactored to explicit strategy classes
+**Quality**: Improved - Logic extracted to dedicated function, could still benefit from explicit strategy classes
 
 ### 4. Factory Function Pattern
 
-**Location**: `_cli.py:386-410`
+**Location**: `_cli.py:380-403`
 
 ```python
 def validate_and_return_repo(path: Path) -> Repo:
@@ -216,7 +222,7 @@ Creates Repo objects with validation and error handling.
 
 ### Violation 1: God Module Anti-Pattern
 
-- **Location**: `/src/git_tree_project_structure_to_yaml/_cli.py` (entire file, 611 lines)
+- **Location**: `/src/git_tree_project_structure_to_yaml/_cli.py` (entire file, 621 lines)
 - **Description**: All functionality is packed into a single module. The `_cli.py` file contains CLI handling, business logic, data access, and formatting - all mixed together.
 - **Impact**:
   - Difficult to test individual components in isolation
@@ -228,39 +234,30 @@ Creates Repo objects with validation and error handling.
   - `formatters.py` - Output formatting (YAML, tree)
   - `git_utils.py` - Git repository utilities
 
-### Violation 2: Large Function (main)
+### Violation 2: Large Function (main) - PARTIALLY ADDRESSED
 
-- **Location**: `/src/git_tree_project_structure_to_yaml/_cli.py:455-606`
-- **Description**: The `main` function is 150+ lines and handles multiple responsibilities: argument parsing, validation, tree building, output generation, and file writing.
-- **Impact**:
-  - Difficult to unit test
-  - Hard to modify one aspect without affecting others
-  - High cyclomatic complexity
-- **Recommendation**: Extract sub-functions for:
-  - Path validation and setup
-  - Tree building orchestration
-  - Output handling
+- **Location**: `/src/git_tree_project_structure_to_yaml/_cli.py:513-616`
+- **Description**: The `main` function has been refactored from 150+ lines to ~100 lines. Helper functions were extracted:
+  - `resolve_repo_paths` - Path resolution logic
+  - `validate_directories` - Directory validation
+  - `generate_output_content` - Output format handling
+  - `build_ls_files_args` - Git command argument construction
+- **Current Status**: Improved but still handles multiple responsibilities
+- **Remaining Recommendation**: Further separation of concerns into distinct modules
 
-### Violation 3: Unused Dependencies
+### ~~Violation 3: Unused Dependencies~~ - RESOLVED
 
-- **Location**: `/home/user/git-tree-project-structure-to-yaml/pyproject.toml:10-11`
-- **Description**: The `packaging` and `pydantic` packages are declared as dependencies but not used anywhere in the codebase.
-- **Impact**:
-  - Increased installation time and package size
-  - Potential security surface from unused code
-  - Misleading dependency list
-- **Recommendation**: Remove unused dependencies or document their intended future use.
+- **Status**: Fixed
+- **Description**: The `packaging` and `pydantic` packages have been removed from `pyproject.toml`.
 
-### Violation 4: Mixed Abstraction Levels
+### Violation 3: Mixed Abstraction Levels - PARTIALLY ADDRESSED
 
-- **Location**: `/src/git_tree_project_structure_to_yaml/_cli.py:156-237`
-- **Description**: The `build_tree_from_git` function mixes high-level tree building with low-level Git command argument construction.
-- **Impact**:
-  - Function does too many things
-  - Difficult to modify Git interaction without affecting tree logic
-- **Recommendation**: Separate Git command building from tree construction.
+- **Location**: `/src/git_tree_project_structure_to_yaml/_cli.py:189-238`
+- **Description**: The `build_tree_from_git` function now delegates Git command argument construction to `build_ls_files_args` (lines 151-186).
+- **Current Status**: Improved separation, but Git operations still mixed with tree logic
+- **Remaining Recommendation**: Consider extracting Git operations to a separate module
 
-### Violation 5: Limited Test Coverage
+### Violation 4: Limited Test Coverage
 
 - **Location**: `/tests/cli/test_yaml_tree.py`
 - **Description**: Only tests for `generate_yaml_output` and `path_node_formatter` exist. No tests for:
@@ -269,12 +266,13 @@ Creates Repo objects with validation and error handling.
   - `validate_and_return_repo`
   - `main` CLI function
   - Tree format output
+  - New helper functions (`resolve_repo_paths`, `validate_directories`, `generate_output_content`)
 - **Impact**:
   - No regression protection for core functionality
   - Difficult to refactor safely
 - **Recommendation**: Add integration tests for Git operations and CLI functionality.
 
-### Violation 6: No Interface Abstractions
+### Violation 5: No Interface Abstractions
 
 - **Location**: Throughout `_cli.py`
 - **Description**: Direct coupling to GitPython's Repo class with no abstraction layer.
@@ -288,13 +286,13 @@ Creates Repo objects with validation and error handling.
 | Metric | Value | Assessment |
 |--------|-------|------------|
 | Total Python modules | 4 | Very small codebase |
-| Source LOC | ~611 | Manageable size |
+| Source LOC | ~621 | Manageable size |
 | Test LOC | ~241 | Moderate test code |
-| External dependencies | 6 runtime | Appropriate |
-| Unused dependencies | 2 | Should be removed |
+| External dependencies | 5 runtime | Appropriate |
+| Unused dependencies | 0 | Resolved |
 | Test coverage | ~30% (estimated) | Needs improvement |
-| Max function length | ~150 lines (main) | Too long |
-| Cyclomatic complexity | Medium-High (main) | Should be reduced |
+| Max function length | ~100 lines (main) | Improved from ~150 |
+| Cyclomatic complexity | Medium (main) | Improved after refactoring |
 
 ## Recommendations Summary
 
@@ -306,16 +304,19 @@ Creates Repo objects with validation and error handling.
    - `formatters/` - Output format strategies
    - `git/` - Git repository abstraction
 
-2. **Remove unused dependencies** (`packaging`, `pydantic`) from `pyproject.toml`
+2. ~~**Remove unused dependencies** (`packaging`, `pydantic`) from `pyproject.toml`~~ - COMPLETED
 
 3. **Add comprehensive tests** for:
    - Git integration (`git_lsfiles_to_path_list`)
    - Tree building (`build_tree_from_git`)
    - CLI integration tests
+   - New helper functions (`resolve_repo_paths`, `validate_directories`, `generate_output_content`)
 
 ### Medium Priority
 
-4. **Extract the main function** into smaller, testable units
+4. ~~**Extract the main function** into smaller, testable units~~ - PARTIALLY COMPLETED
+   - Helper functions extracted: `resolve_repo_paths`, `validate_directories`, `generate_output_content`, `build_ls_files_args`
+   - Further modularization still recommended
 
 5. **Introduce a Repository Protocol/Interface** for Git operations to improve testability
 

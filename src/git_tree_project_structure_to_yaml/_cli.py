@@ -148,6 +148,44 @@ def add_path_to_tree(tree: Tree[Path], path: Path, root: Path) -> None:
         cursor_node = child
 
 
+def build_ls_files_args(
+    directory: Path,
+    exclude: set[str],
+    others: bool,
+    stage: bool,
+    cached: bool,
+    exclude_standard: bool,
+) -> list[str]:
+    """Build arguments for git ls-files command.
+
+    Args:
+        directory: Directory to list files from
+        exclude: Set of patterns to exclude
+        others: Whether to include untracked files
+        stage: Whether to include staged files
+        cached: Whether to include cached files
+        exclude_standard: Whether to use standard Git exclusions
+
+    Returns:
+        list[str]: Arguments for git ls-files command
+    """
+    ls_files_args: list[str] = []
+    if others:
+        ls_files_args.append("--others")
+    if stage:
+        ls_files_args.append("--stage")
+    if cached:
+        ls_files_args.append("--cached")
+    if exclude_standard:
+        ls_files_args.append("--exclude-standard")
+    for exclude_pattern in exclude:
+        ls_files_args.append(f"--exclude={exclude_pattern}")
+    if not others:
+        ls_files_args.append("--recurse-submodules")
+    ls_files_args.append(str(directory))
+    return ls_files_args
+
+
 def build_tree_from_git(
     repo: Repo,
     root_node: Path,
@@ -177,10 +215,7 @@ def build_tree_from_git(
     Returns:
         Tree[Path]: Tree object representing the repository structure
     """
-    # Initialize exclude set if not provided
-    if exclude is None:
-        exclude = set()
-
+    exclude = exclude or set()
     git_root_path = Path(repo.git_dir).parent
     logger.debug("Git root path: %s", git_root_path)
     logger.debug("Root node: %s", root_node)
@@ -190,42 +225,14 @@ def build_tree_from_git(
         relative_root = relative_root.absolute()
     root_dir_name = relative_root.name
 
-    # Create a basic tree
     tree: Tree[Path] = Tree(f"# Directory Tree for {root_dir_name}")
 
     for directory in directories:
         tree.add(directory.absolute())
-
-        # Prepare Git command arguments based on options
-        ls_files_args: list[str] = []
-
-        # By default with no options, git ls-files shows cached/tracked files
-        # Add specific file type options if requested
-        if others:
-            # --others shows untracked files
-            ls_files_args.append("--others")
-        if stage:
-            # --stage shows staged content's object name
-            ls_files_args.append("--stage")
-        if cached:
-            # --cached explicitly shows cached/tracked files
-            ls_files_args.append("--cached")
-        if exclude_standard:
-            # Apply standard exclusions like .gitignore patterns
-            ls_files_args.append("--exclude-standard")
-        for exclude_pattern in exclude:
-            ls_files_args.append(f"--exclude={exclude_pattern}")
-        # Only include recursive submodules if not using --others
-        # (they can't be used together)
-        if not others:
-            ls_files_args.append("--recurse-submodules")
-        ls_files_args.append(str(directory))
-        # Get files in the repository using GitPython
+        ls_files_args = build_ls_files_args(directory, exclude, others, stage, cached, exclude_standard)
         file_list = git_lsfiles_to_path_list(repo, *ls_files_args)
         with tree:
-            # Process each file path
             for file_path in file_list:
-                # Debug the path we're processing
                 logger.debug("Processing %s: %s", "directory" if file_path.is_dir() else "file", file_path)
                 add_path_to_tree(tree, file_path, git_root_path)
     return tree
@@ -436,6 +443,72 @@ def empty_list_if_none[T](value: list[T] | None) -> list[T]:
     return value or []
 
 
+def resolve_repo_paths(repo_paths: list[Path], root_node: Path) -> set[Path]:
+    """Convert repository paths to relative paths within the root node.
+
+    Args:
+        repo_paths: List of paths to process
+        root_node: Root node to make paths relative to
+
+    Returns:
+        set[Path]: Set of resolved paths
+    """
+    if not repo_paths:
+        logger.debug("No repo paths provided, using root node: %s", root_node)
+        return {root_node}
+
+    relative_repo_paths: set[Path] = set()
+    for path in repo_paths:
+        path_obj = Path(path)
+        logger.debug("Processing path: %s", path_obj)
+        try:
+            rel_path = path_obj.relative_to(root_node)
+            logger.debug("Successfully made relative: %s", rel_path)
+            relative_repo_paths.add(rel_path)
+        except ValueError as e:
+            logger.exception("Error making path relative: %s - %s", path_obj, e)
+            logger.debug("Using original path instead: %s", path_obj)
+            relative_repo_paths.add(path_obj)
+    return relative_repo_paths
+
+
+def validate_directories(paths: set[Path]) -> None:
+    """Validate that all paths are directories.
+
+    Args:
+        paths: Set of paths to validate
+
+    Raises:
+        typer.Exit: If any path is not a directory
+    """
+    for path in paths:
+        if not path.is_dir():
+            logger.error("Error: Path '%s' is not a directory", path)
+            raise typer.Exit(code=1)
+
+
+def generate_output_content(
+    tree: Tree[Path], output_format: OutputFormat, options_set: set[str],
+) -> str:
+    """Generate output content based on the requested format.
+
+    Args:
+        tree: Tree object representing the repository structure
+        output_format: Output format (yaml or tree)
+        options_set: Set of options used for the message when no files found
+
+    Returns:
+        str: Generated output content
+    """
+    if output_format == OutputFormat.YAML:
+        yaml_content = generate_yaml_output(tree)
+        if yaml_content:
+            return yaml_content
+        logger.info("No matching files found in the repository with the specified options")
+        return f"# Nothing found that matched the specified options: {options_set}\n"
+    return generate_tree_structure(tree)
+
+
 @app.command()
 def main(
     repo_paths: Annotated[list[Path] | None, typer.Argument(help="Paths to directories in the Git repository")] = None,
@@ -501,55 +574,25 @@ def main(
     root_node = Path(Path(git_repository.git_dir).parent if repo_as_root else base_repo_path)
     repo_as_root = root_node == base_repo_path
 
-    repo_paths = empty_list_if_none(repo_paths)
-    logger.debug("Repository paths: %s", repo_paths)
+    repo_paths_list = empty_list_if_none(repo_paths)
+    logger.debug("Repository paths: %s", repo_paths_list)
     logger.debug("Root node for relativity: %s", root_node)
 
-    # Safely convert paths to relative
-    relative_repo_paths = set()
-    if not repo_paths:
-        relative_repo_paths = {root_node}
-        logger.debug("No repo paths provided, using root node: %s", root_node)
-    else:
-        for path in repo_paths:
-            path_obj = Path(path)
-            logger.debug("Processing path: %s", path_obj)
-            try:
-                rel_path = path_obj.relative_to(root_node)
-                logger.debug("Successfully made relative: %s", rel_path)
-                relative_repo_paths.add(rel_path)
-            except ValueError as e:
-                logger.exception("Error making path relative: %s - %s", path_obj, e)
-                # You could either skip this path or use a different approach
-                # For debugging, we'll try to continue with the original path
-                logger.debug("Using original path instead: %s", path_obj)
-                relative_repo_paths.add(path_obj)
-
+    relative_repo_paths = resolve_repo_paths(repo_paths_list, root_node)
     logger.debug("Final relative repo paths: %s", relative_repo_paths)
-    for repo_path in relative_repo_paths:
-        if not repo_path.is_dir():
-            logger.error("Error: Path '%s' is not a directory", repo_path)
-            raise typer.Exit(code=1)
+    validate_directories(relative_repo_paths)
 
-    # Convert exclude list to a set for faster lookups
     exclude_set = set(empty_list_if_none(exclude))
-    options_set = set()
-    if others:
-        options_set.add("--others")
-    if stage:
-        options_set.add("--stage")
-    if cached:
-        options_set.add("--cached")
-    if exclude_standard:
-        options_set.add("--exclude-standard")
+    options_set = {
+        opt for opt, flag in [
+            ("--others", others), ("--stage", stage), ("--cached", cached), ("--exclude-standard", exclude_standard),
+        ] if flag
+    }
 
     try:
-        # Convert directories to relative paths within the repository if provided
-
         logger.debug("Using paths: %s", relative_repo_paths)
         logger.debug("Using options: %s", options_set)
 
-        # Build a tree from the Git repository using GitPython and nutree
         tree = build_tree_from_git(
             repo=git_repository,
             root_node=root_node,
@@ -561,28 +604,12 @@ def main(
             exclude_standard=exclude_standard,
         )
 
-        # Generate output based on requested format
-        if format == OutputFormat.YAML:
-            # Generate YAML using nutree's native formatting
-            yaml_content = generate_yaml_output(tree)
+        output_content = generate_output_content(tree, format, options_set)
 
-            if yaml_content:
-                output_content = yaml_content
-            else:
-                # No files found but that's not an error - just show empty structure
-                logger.info("No matching files found in the repository with the specified options")
-                output_content = f"# Nothing found that matched the specified options: {options_set}\n"
-        else:  # tree format
-            # Use nutree's built-in formatting
-            output_content = generate_tree_structure(tree)
-
-        # Write to output file or print to stdout
         if output:
             with open(output, "w") as f:
                 f.write(output_content)
             logger.info("Output written to %s", output)
-        else:
-            pass
 
     except Exception as e:
         logger.exception("An error occurred: %s", e)
