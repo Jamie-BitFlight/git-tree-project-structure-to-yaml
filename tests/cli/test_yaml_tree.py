@@ -62,7 +62,7 @@ class TestPathNodeFormatter:
     def test_format_file(self) -> None:
         """Test formatting a file node (no trailing slash)."""
         # Create a node with a Path object representing a file
-        tree = Tree("Test Tree")
+        tree: Tree[Path] = Tree("Test Tree")
         node = tree.add(Path("test_file.txt"))
 
         # Format the node and verify it doesn't have a trailing slash
@@ -77,7 +77,7 @@ class TestPathNodeFormatter:
             mp.setattr(Path, "is_dir", mock_is_dir)
 
             # Create a node with a Path object representing a directory
-            tree = Tree("Test Tree")
+            tree: Tree[Path] = Tree("Test Tree")
             node = tree.add(Path("test_dir"))
 
             # Format the node and verify it has a trailing slash
@@ -253,35 +253,41 @@ class TestGenerateYamlOutput:
 class TestGitLsfilesToPathList:
     """Tests for the git_lsfiles_to_path_list function."""
 
-    def test_successful_ls_files_returns_path_list(self) -> None:
+    def test_successful_ls_files_returns_path_list(self, tmp_path) -> None:
         """Test that successful git ls-files returns a list of paths."""
+        fake_repo = tmp_path / "repo"
+        fake_repo.mkdir()
         mock_repo = MagicMock()
-        mock_repo.git_dir = "/fake/repo/.git"
+        mock_repo.git_dir = str(fake_repo / ".git")
         mock_repo.git.ls_files.return_value = "file1.txt\ndir/file2.py"
 
         result = git_lsfiles_to_path_list(mock_repo, "--cached")
 
         assert len(result) == 2
-        assert result[0] == Path("/fake/repo/file1.txt")
-        assert result[1] == Path("/fake/repo/dir/file2.py")
+        assert result[0] == fake_repo / "file1.txt"
+        assert result[1] == fake_repo / "dir" / "file2.py"
 
-    def test_ls_files_with_staged_output(self) -> None:
+    def test_ls_files_with_staged_output(self, tmp_path) -> None:
         """Test parsing staged output with mode/hash prefix."""
+        fake_repo = tmp_path / "repo"
+        fake_repo.mkdir()
         mock_repo = MagicMock()
-        mock_repo.git_dir = "/fake/repo/.git"
+        mock_repo.git_dir = str(fake_repo / ".git")
         # Staged output format: mode hash stage\tfilename
         mock_repo.git.ls_files.return_value = "100644 abc123 0\tfile1.txt\n100644 def456 0\tfile2.py"
 
         result = git_lsfiles_to_path_list(mock_repo, "--stage")
 
         assert len(result) == 2
-        assert result[0] == Path("/fake/repo/file1.txt")
-        assert result[1] == Path("/fake/repo/file2.py")
+        assert result[0] == fake_repo / "file1.txt"
+        assert result[1] == fake_repo / "file2.py"
 
-    def test_git_command_failure_raises_exit(self) -> None:
+    def test_git_command_failure_raises_exit(self, tmp_path) -> None:
         """Test that git command failure raises typer.Exit."""
+        fake_repo = tmp_path / "repo"
+        fake_repo.mkdir()
         mock_repo = MagicMock()
-        mock_repo.git_dir = "/fake/repo/.git"
+        mock_repo.git_dir = str(fake_repo / ".git")
         mock_repo.git.ls_files.side_effect = Exception("Git command failed")
 
         with pytest.raises(typer.Exit) as exc_info:
@@ -293,15 +299,15 @@ class TestGitLsfilesToPathList:
 class TestAddPathToTree:
     """Tests for the add_path_to_tree function."""
 
-    def test_add_single_file_to_tree(self, mock_path_is_dir) -> None:
+    def test_add_single_file_to_tree(self, mock_path_is_dir, tmp_path) -> None:
         """Test adding a single file to an empty tree."""
         with pytest.MonkeyPatch.context() as mp:
             mock_is_dir = mock_path_is_dir({"root"})
             mp.setattr(Path, "is_dir", mock_is_dir)
 
             tree = Tree[Path]("Test Tree")
-            root = Path("/root")
-            file_path = Path("/root/file.txt")
+            root = tmp_path / "root"
+            file_path = tmp_path / "root" / "file.txt"
 
             add_path_to_tree(tree, file_path, root)
 
@@ -312,15 +318,15 @@ class TestAddPathToTree:
             assert len(root_node.children) == 1
             assert root_node.children[0].data == file_path
 
-    def test_add_nested_file_creates_intermediate_directories(self, mock_path_is_dir) -> None:
+    def test_add_nested_file_creates_intermediate_directories(self, mock_path_is_dir, tmp_path) -> None:
         """Test adding a deeply nested file creates intermediate nodes."""
         with pytest.MonkeyPatch.context() as mp:
             mock_is_dir = mock_path_is_dir({"root", "dir1", "dir2"})
             mp.setattr(Path, "is_dir", mock_is_dir)
 
             tree = Tree[Path]("Test Tree")
-            root = Path("/root")
-            nested_file = Path("/root/dir1/dir2/file.txt")
+            root = tmp_path / "root"
+            nested_file = tmp_path / "root" / "dir1" / "dir2" / "file.txt"
 
             add_path_to_tree(tree, nested_file, root)
 
@@ -328,21 +334,21 @@ class TestAddPathToTree:
             root_node = tree.children[0]
             assert root_node.data == root
             dir1_node = root_node.children[0]
-            assert dir1_node.data == Path("/root/dir1")
+            assert dir1_node.data == tmp_path / "root" / "dir1"
             dir2_node = dir1_node.children[0]
-            assert dir2_node.data == Path("/root/dir1/dir2")
+            assert dir2_node.data == tmp_path / "root" / "dir1" / "dir2"
             file_node = dir2_node.children[0]
             assert file_node.data == nested_file
 
-    def test_add_duplicate_path_does_not_create_duplicate(self, mock_path_is_dir) -> None:
+    def test_add_duplicate_path_does_not_create_duplicate(self, mock_path_is_dir, tmp_path) -> None:
         """Test adding the same path twice doesn't duplicate nodes."""
         with pytest.MonkeyPatch.context() as mp:
             mock_is_dir = mock_path_is_dir({"root"})
             mp.setattr(Path, "is_dir", mock_is_dir)
 
             tree = Tree[Path]("Test Tree")
-            root = Path("/root")
-            file_path = Path("/root/file.txt")
+            root = tmp_path / "root"
+            file_path = tmp_path / "root" / "file.txt"
 
             add_path_to_tree(tree, file_path, root)
             add_path_to_tree(tree, file_path, root)
@@ -355,48 +361,58 @@ class TestAddPathToTree:
 class TestBuildLsFilesArgs:
     """Tests for the build_ls_files_args function."""
 
-    def test_build_args_with_others_flag(self) -> None:
+    def test_build_args_with_others_flag(self, tmp_path) -> None:
         """Test building args with --others flag."""
+        test_dir = tmp_path / "test"
+        test_dir.mkdir()
         args = build_ls_files_args(
-            directory=Path("/test"), exclude=set(), others=True, stage=False, cached=False, exclude_standard=False
+            directory=test_dir, exclude=set(), others=True, stage=False, cached=False, exclude_standard=False
         )
 
         assert "--others" in args
         assert "--stage" not in args
         assert "--cached" not in args
         assert "--recurse-submodules" not in args  # Not added when others=True
-        assert str(Path("/test")) in args
+        assert str(test_dir) in args
 
-    def test_build_args_with_stage_flag(self) -> None:
+    def test_build_args_with_stage_flag(self, tmp_path) -> None:
         """Test building args with --stage flag."""
+        test_dir = tmp_path / "test"
+        test_dir.mkdir()
         args = build_ls_files_args(
-            directory=Path("/test"), exclude=set(), others=False, stage=True, cached=False, exclude_standard=False
+            directory=test_dir, exclude=set(), others=False, stage=True, cached=False, exclude_standard=False
         )
 
         assert "--stage" in args
         assert "--others" not in args
         assert "--recurse-submodules" in args  # Added when others=False
 
-    def test_build_args_with_cached_flag(self) -> None:
+    def test_build_args_with_cached_flag(self, tmp_path) -> None:
         """Test building args with --cached flag."""
+        test_dir = tmp_path / "test"
+        test_dir.mkdir()
         args = build_ls_files_args(
-            directory=Path("/test"), exclude=set(), others=False, stage=False, cached=True, exclude_standard=False
+            directory=test_dir, exclude=set(), others=False, stage=False, cached=True, exclude_standard=False
         )
 
         assert "--cached" in args
 
-    def test_build_args_with_exclude_standard(self) -> None:
+    def test_build_args_with_exclude_standard(self, tmp_path) -> None:
         """Test building args with --exclude-standard flag."""
+        test_dir = tmp_path / "test"
+        test_dir.mkdir()
         args = build_ls_files_args(
-            directory=Path("/test"), exclude=set(), others=False, stage=False, cached=False, exclude_standard=True
+            directory=test_dir, exclude=set(), others=False, stage=False, cached=False, exclude_standard=True
         )
 
         assert "--exclude-standard" in args
 
-    def test_build_args_with_exclude_patterns(self) -> None:
+    def test_build_args_with_exclude_patterns(self, tmp_path) -> None:
         """Test building args with exclude patterns."""
+        test_dir = tmp_path / "test"
+        test_dir.mkdir()
         args = build_ls_files_args(
-            directory=Path("/test"),
+            directory=test_dir,
             exclude={"*.pyc", "node_modules"},
             others=False,
             stage=False,
@@ -406,10 +422,12 @@ class TestBuildLsFilesArgs:
 
         assert "--exclude=*.pyc" in args or "--exclude=node_modules" in args
 
-    def test_build_args_with_all_options(self) -> None:
+    def test_build_args_with_all_options(self, tmp_path) -> None:
         """Test building args with all options enabled."""
+        test_dir = tmp_path / "test" / "dir"
+        test_dir.mkdir(parents=True)
         args = build_ls_files_args(
-            directory=Path("/test/dir"), exclude={"*.log"}, others=True, stage=True, cached=True, exclude_standard=True
+            directory=test_dir, exclude={"*.log"}, others=True, stage=True, cached=True, exclude_standard=True
         )
 
         assert "--others" in args
@@ -417,7 +435,7 @@ class TestBuildLsFilesArgs:
         assert "--cached" in args
         assert "--exclude-standard" in args
         assert "--exclude=*.log" in args
-        assert str(Path("/test/dir")) in args
+        assert str(test_dir) in args
 
 
 class TestIndentString:
@@ -491,10 +509,11 @@ class TestValidateAndReturnPath:
 
         assert result == test_dir.resolve()
 
-    def test_nonexistent_path_raises_exit(self) -> None:
+    def test_nonexistent_path_raises_exit(self, tmp_path) -> None:
         """Test that a non-existent path raises typer.Exit."""
+        nonexistent = tmp_path / "nonexistent" / "path"
         with pytest.raises(typer.Exit) as exc_info:
-            validate_and_return_path(Path("/nonexistent/path"))
+            validate_and_return_path(nonexistent)
 
         assert exc_info.value.exit_code == 1
 
@@ -504,7 +523,7 @@ class TestEmptyListIfNone:
 
     def test_none_returns_empty_list(self) -> None:
         """Test that None returns an empty list."""
-        result = empty_list_if_none(None)
+        result: list[int] = empty_list_if_none(None)
         assert result == []
 
     def test_list_returns_same_list(self) -> None:
@@ -515,16 +534,17 @@ class TestEmptyListIfNone:
 
     def test_empty_list_returns_empty_list(self) -> None:
         """Test that an empty list returns an empty list."""
-        result = empty_list_if_none([])
+        result: list[int] = empty_list_if_none([])
         assert result == []
 
 
 class TestResolveRepoPaths:
     """Tests for the resolve_repo_paths function."""
 
-    def test_empty_paths_returns_root_node(self) -> None:
+    def test_empty_paths_returns_root_node(self, tmp_path) -> None:
         """Test that empty paths returns set containing root node."""
-        root = Path("/root")
+        root = tmp_path / "root"
+        root.mkdir()
         result = resolve_repo_paths([], root)
         assert result == {root}
 
